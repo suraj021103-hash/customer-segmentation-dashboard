@@ -1,5 +1,8 @@
 # Customer Segregation with K-Means
 
+Live Demo:
+https://customer-segmentation-dashboard-avecthekpfxuftwrvphhmg.streamlit.app/
+
 This project segments mall customers using K-Means clustering on the `Mall_Customers.csv` dataset.
 
 ## Files
