@@ -163,11 +163,22 @@ if page == "Home":
     - Business Insights
     """)
 
-    c1, c2, c3 = st.columns(3)
+    avg_income = df["Annual Income (k$)"].mean()
+    avg_spending = df["Spending Score (1-100)"].mean()
+
+    c1, c2, c3, c4 = st.columns(4)
 
     c1.metric("Customers", df.shape[0])
-    c2.metric("Features", df.shape[1] - 2)
-    c3.metric("Segments", df["Segment"].nunique())
+    c2.metric("Segments", df["Segment"].nunique())
+    c3.metric("Avg Income", f"${avg_income:.1f}k")
+    c4.metric("Avg Spending", f"{avg_spending:.1f}")
+
+    st.success(
+        """
+        This dashboard enables customer segmentation using K-Means clustering,
+        PCA-based visualization, and explainable business insights for targeted marketing.
+        """
+    )
 
 # =====================================================
 # DATASET OVERVIEW
@@ -251,27 +262,6 @@ elif page == "Clustering Analysis":
 
     st.header("📈 Clustering Analysis")
 
-    st.subheader("Elbow Method Interpretation")
-
-    st.info(
-        """
-        The Elbow Method indicates that K=5 is the optimal number
-        of customer segments.
-
-        Using fewer clusters may combine customers with different
-        purchasing behaviors, while using more clusters adds
-        unnecessary complexity without significant business value.
-        """
-    )
-
-    st.subheader("Silhouette Score")
-
-    st.success(
-        "K=5 was selected using Elbow Method and validated through Silhouette Analysis."
-    )
-
-    # PCA
-
     pca = PCA(n_components=2)
 
     pca_features = pca.fit_transform(X_scaled)
@@ -282,6 +272,28 @@ elif page == "Clustering Analysis":
     )
 
     pca_df["Cluster"] = df["Cluster"]
+
+    variance = pca.explained_variance_ratio_.sum()
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Optimal Clusters", "5")
+    col2.metric("PCA Variance Retained", f"{variance:.2%}")
+    col3.metric("Model", "K-Means")
+
+    st.success(
+        """
+        Explainable AI Insight
+
+        The Elbow Method identified 5 meaningful customer segments.
+
+        PCA retained most of the important customer information
+        while reducing dimensionality for visualization.
+
+        This enables non-technical users to understand customer
+        groups without interpreting raw clustering metrics.
+        """
+    )
 
     st.subheader("PCA Cluster Visualization")
 
@@ -299,12 +311,6 @@ elif page == "Clustering Analysis":
 
     st.pyplot(fig)
 
-    variance = pca.explained_variance_ratio_.sum()
-
-    st.write(
-        f"Total Variance Explained by PCA: {variance:.2%}"
-    )
-
 # =====================================================
 # CUSTOMER SEGMENTS
 # =====================================================
@@ -312,6 +318,11 @@ elif page == "Clustering Analysis":
 elif page == "Customer Segments":
 
     st.header("👥 Customer Segments")
+    st.subheader("Segment Distribution")
+
+    segment_counts = df["Segment"].value_counts()
+
+    st.bar_chart(segment_counts)
 
     cluster_summary = df.groupby("Segment").agg({
         "Age": "mean",
@@ -322,6 +333,14 @@ elif page == "Customer Segments":
     st.subheader("Segment Statistics")
 
     st.dataframe(cluster_summary)
+    csv = cluster_summary.to_csv().encode("utf-8")
+
+    st.download_button(
+        "📥 Download Segment Report",
+        csv,
+        "customer_segments.csv",
+        "text/csv"
+    )
 
     st.subheader("Business Insights")
 
@@ -412,8 +431,16 @@ elif page == "Predict Customer":
             f"Predicted Segment: {segment}"
         )
 
-        st.subheader("Recommendation")
-        st.write(recommendation)
+        st.info(
+            f"Recommendation: {recommendation}"
+        )
 
-        st.subheader("Business Insight")
-        st.write(insight)
+        st.warning(
+            f"Business Insight: {insight}"
+        )
+
+st.markdown("---")
+
+st.caption(
+    "Customer Segmentation Dashboard | K-Means • PCA • Streamlit • Explainable AI"
+)
